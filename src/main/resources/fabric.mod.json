@@ -16,7 +16,7 @@
   "environment": "client",
   "entrypoints": {
     "client": [
-      "com.dan.minecraf7tv.Minecraft7tv"
+      "com.dan.minecraft7tv.Minecraft7tv"
     ]
   },
   "mixins": [
