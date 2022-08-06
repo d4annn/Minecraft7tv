@@ -1,9 +1,8 @@
 package com.dan.minecraft7tv.utils;
 
-import com.convertapi.client.Config;
-import com.convertapi.client.ConvertApi;
-import com.convertapi.client.Param;
 import com.dan.minecraft7tv.emote.Buffers;
+import com.dan.minecraft7tv.emote.EmoteRenderer;
+import com.dan.minecraft7tv.emote.RenderableEmote;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.texture.NativeImage;
 import org.jetbrains.annotations.Nullable;
@@ -27,22 +26,7 @@ public class FileUtils {
 
     public static final File FOLDER = new File(new File(MinecraftClient.getInstance().runDirectory, "config").getPath() + "\\Minecraft7tv");
     public static final File TEMP_FODLER = new File(FOLDER.getPath() + "\\temp");
-
-    static {
-        Config.setDefaultSecret("ZF7wUzLiJTxTxb0t");
-    }
-
-    /*
-    public static void webpToGif(String in, String out) {
-        try {
-            ConvertApi.convert("webp", "gif",
-                    new Param("Files", Paths.get(in))
-            ).get().saveFilesSync(Paths.get(out));
-        } catch (IOException | InterruptedException | ExecutionException e) {
-        }
-    }
-
-     */
+    public static final File CONFIG = new File(FOLDER.getPath() + "\\config.json");
 
     public static void webpToGif(String url, File in, File out) {
         try (InputStream is = new URL(url).openStream()) {
@@ -53,14 +37,36 @@ public class FileUtils {
         }
     }
 
+    public static void open(String url) {
+        Runtime rt = Runtime.getRuntime();
+        try {
+            rt.exec("rundll32 url.dll,FileProtocolHandler " + url);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+     public static boolean deleteDirectory(File path) {
+        if (path.exists()) {
+            File[] files = path.listFiles();
+            for (int i = 0; i < files.length; i++) {
+                if (files[i].isDirectory()) {
+                    deleteDirectory(files[i]);
+                } else {
+                    files[i].delete();
+                }
+            }
+        }
+        return (path.delete());
+    }
+
     public static void convertWebpToFif(String in, String out) {
         ProcessBuilder processBuilder = new ProcessBuilder();
         if (getOsName().startsWith("Windows")) {
-            processBuilder.command("cmd.exe", "/c", String.format("ImageMagick-7.1.0\\magick.exe %s %s ", in, out));
+            processBuilder.command("cmd.exe", "/c", String.format("..\\lib\\ImageMagick-7.1.0\\magick.exe %s %s ", in, out));
         } else {
-            processBuilder.command("bash", "-c", String.format("magick %s %s ", in, out));
+            processBuilder.command("bash", "-c", String.format("..\\lib\\ImageMagick-7.1.0\\magick %s %s ", in, out));
         }
-
         try {
             Process process = processBuilder.start();
             StringBuilder output = new StringBuilder();
@@ -69,7 +75,6 @@ public class FileUtils {
             while ((line = reader.readLine()) != null) {
                 output.append(line).append("\n");
             }
-
             int exitVal = process.waitFor();
             if (exitVal == 0) {
                 System.out.println("Succefully converted");
@@ -84,16 +89,6 @@ public class FileUtils {
         String OS = null;
         OS = System.getProperty("os.name");
         return OS;
-    }
-
-    public static InputStream webpToIs(String in) {
-        try {
-            return ConvertApi.convert("webp", "gif",
-                    new Param("Files", Paths.get(in))
-            ).get().asStream().get();
-        } catch (IOException | InterruptedException | ExecutionException e) {
-        }
-        return null;
     }
 
     /**
@@ -127,6 +122,7 @@ public class FileUtils {
         try {
             FOLDER.mkdirs();
             TEMP_FODLER.mkdirs();
+            CONFIG.createNewFile();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -168,6 +164,13 @@ public class FileUtils {
                 }
                 throw var9;
             }
+        }
+    }
+
+    //Call when closing the game
+    public static void freeGifs() {
+        for(RenderableEmote emote : EmoteRenderer.getInstance().getEmotes()) {
+            STBImage.stbi_image_free(emote.getEmote().getBuffer().gifBytes);
         }
     }
 

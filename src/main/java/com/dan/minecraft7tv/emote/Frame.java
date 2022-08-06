@@ -1,12 +1,14 @@
 package com.dan.minecraft7tv.emote;
 
+import com.dan.minecraft7tv.config.Config;
+
 public class Frame {
 
+    private final int frameRate;
     private int current;
     private int max;
     //by default to 2 ticks
     private int frame;
-    private final int frameRate;
 
     public Frame(int current, int max, int frameRate) {
         this.current = current;
@@ -20,13 +22,14 @@ public class Frame {
 
     //frames start at 0
     public void nextFrame(int frames) {
-        if (current + frames <= max) {
-            this.current += frames;
+
+            if (current + frames <= max) {
+                this.current += frames;
+                frame = 0;
+                return;
+            }
+            current = (current + frames) - max - 1;
             frame = 0;
-            return;
-        }
-        current = (current + frames) - max - 1;
-        frame = 0;
     }
 
     public int getCurrent() {

@@ -3,9 +3,9 @@ package com.dan.minecraft7tv.config;
 import net.minecraft.text.Text;
 
 public enum Position {
-    TOP("top"),
-    CENTER("center"),
-    BOTTOM("bottom");
+    TOP("Top"),
+    CENTER("Center"),
+    BOTTOM("Bottom");
 
     private String name;
 
