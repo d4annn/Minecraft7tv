@@ -48,7 +48,6 @@ public abstract class ChatHudMixin extends DrawableHelper implements ChatHudAcce
     private List<String> renderedGif = new ArrayList<>();
     private List<String> current = new ArrayList<>();
     private int gap = 0;
-    private Map<LineIdentifier, Style> styles = new HashMap<>();
     @Shadow
     private long lastMessageAddedTime;
 
@@ -66,18 +65,6 @@ public abstract class ChatHudMixin extends DrawableHelper implements ChatHudAcce
 
     @Shadow
     public abstract boolean mouseClicked(double mouseX, double mouseY);
-
-    @Inject(method = "addMessage(Lnet/minecraft/text/Text;IIZ)V", at = @At("HEAD"))
-    private void getStyles(Text message, int messageId, int timestamp, boolean refresh, CallbackInfo ci) {
-        Object[] lineTexts = ((TranslatableText) message).getArgs();
-        for (Object word : lineTexts) {
-            if (word instanceof LiteralText text) {
-                if (!this.styles.containsKey(new LineIdentifier(text.getString(), message.getString()))) {
-                    this.styles.put(new LineIdentifier(text.getString(), message.getString()), text.getStyle());
-                }
-            }
-        }
-    }
 
     private List<String> getEmotes(String line) {
         List<String> result = new ArrayList<>();
@@ -269,18 +256,6 @@ public abstract class ChatHudMixin extends DrawableHelper implements ChatHudAcce
         }
     }
 
-    public Style getStyle(String word, String line) {
-        LineIdentifier l = null;
-        for (LineIdentifier e : styles.keySet()) {
-            if (e.getLine().equals(line) && e.getWord().equals(word)) {
-                l = e;
-            }
-        }
-        Style st = this.styles.getOrDefault(l, Style.EMPTY);
-        int a = 12313 + 123;
-        return st;
-    }
-
     @Override
     public List<String> getCurrent() {
         return this.renderedGif;
@@ -290,17 +265,5 @@ public abstract class ChatHudMixin extends DrawableHelper implements ChatHudAcce
     public void clear() {
         System.out.println("cl");
         this.current.clear();
-    }
-
-    @Inject(method = "clear", at = @At("HEAD"))
-    private void clearCache(boolean clearHistory, CallbackInfo ci) {
-        System.out.println("cl");
-        this.styles.clear();
-    }
-
-    @Inject(method = "reset", at = @At("HEAD"))
-    private void clearCache1(CallbackInfo ci) {
-        System.out.println("cl");
-        this.styles.clear();
     }
 }
