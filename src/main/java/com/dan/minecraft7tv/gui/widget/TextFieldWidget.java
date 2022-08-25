@@ -1,6 +1,5 @@
 package com.dan.minecraft7tv.gui.widget;
 
-import com.dan.minecraft7tv.gui.OptionsScreen;
 import com.dan.minecraft7tv.utils.RenderUtils;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -42,7 +41,6 @@ public class TextFieldWidget implements Widget {
         this.text = "";
     }
 
-
     public String getSelectedText() {
         if (this.selecting) return this.text;
         return "";
@@ -56,19 +54,21 @@ public class TextFieldWidget implements Widget {
         space /= 2;
         matrices.push();
         RenderUtils.positionAccurateScale(matrices, 0.6f, this.x - 1, this.y + space);
-        tr.draw(matrices, text, this.x - 1, this.y + space + 1.5f, Color.WHITE.getRGB());
+        tr.draw(matrices, getRenderedText(), this.x - 1, this.y + space + 1.5f, Color.WHITE.getRGB());
         matrices.pop();
         if (this.selected && tick > 15) {
             StringBuilder s = new StringBuilder(text);
-            if (this.selectedChar == -1) {
-                s.setLength(0);
-            } else {
-                if (!this.text.isEmpty())
-                    s.delete(this.selectedChar, this.text.length() - 1);
+            if (this.text.equals(getRenderedText())) {
+                if (this.selectedChar == -1) {
+                    s.setLength(0);
+                } else {
+                    if (!this.text.isEmpty())
+                        s.delete(this.selectedChar, this.text.length() - 1);
+                }
+                float gap = this.selectedChar == -1 ? -0.1f : 0;
+                float gap1 = s.length() == text.length() || s.length() == 0 ? -0.1f : 0;
+                RenderUtils.renderQuad(matrices, this.x - 1 + (tr.getWidth(s.toString())) * 0.6f + 0.6f + gap, this.y + space + 1.5f, this.x - 1 + (tr.getWidth(s.toString())) * 0.6f + 1.2f + gap + gap1, this.y + space + 1.5f + tr.fontHeight * 0.6f, new Color(255, 255, 255, 255).getRGB());
             }
-            float gap = this.selectedChar == -1 ? -0.1f : 0;
-            float gap1 = s.length() == text.length() || s.length() == 0 ? -0.1f : 0;
-            RenderUtils.renderQuad(matrices, this.x - 1 + (tr.getWidth(s.toString())) * 0.6f + 0.6f + gap, this.y + space + 1.5f, this.x - 1 + (tr.getWidth(s.toString())) * 0.6f + 1.2f + gap + gap1, this.y + space + 1.5f + tr.fontHeight * 0.6f, new Color(255, 255, 255, 255).getRGB());
         }
         String select = getSelectedText();
         if (!select.isEmpty()) {
@@ -99,7 +99,7 @@ public class TextFieldWidget implements Widget {
     public boolean onMouseClick(double mouseX, double mouseY) {
         if (isHovered(mouseX, mouseY)) {
             this.selected = true;
-            this.selectedChar = this.text.length() -1;
+            this.selectedChar = this.text.length() - 1;
         } else {
             this.selecting = false;
             this.selected = false;
@@ -118,7 +118,7 @@ public class TextFieldWidget implements Widget {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if(!this.selected) return false;
+        if (!this.selected) return false;
         if (Screen.isSelectAll(keyCode)) {
             this.selecting = true;
         } else if (Screen.isCopy(keyCode)) {
@@ -130,7 +130,7 @@ public class TextFieldWidget implements Widget {
             String t = MinecraftClient.getInstance().keyboard.getClipboard();
             if (processPattern(false, t)) {
                 StringBuilder sb = new StringBuilder(this.text);
-                sb.insert(this.selectedChar, t);
+                sb.insert(Math.max(this.selectedChar, 0), t);
                 this.text = sb.toString();
                 this.selectedChar += t.length();
                 this.tick = 21;
@@ -269,6 +269,50 @@ public class TextFieldWidget implements Widget {
         return false;
     }
 
+    private String getRenderedText() {
+        StringBuilder renderedText = new StringBuilder();
+        for (char c : this.text.toCharArray()) {
+            if (tr.getWidth(renderedText.toString() + c) * 0.6 <= this.width - this.x) {
+                renderedText.append(c);
+            } else {
+                break;
+            }
+        }
+        return renderedText.toString();
+    }
+
+    public float getX() {
+        return x;
+    }
+
+    public void setX(float x) {
+        this.x = x;
+    }
+
+    public float getY() {
+        return y;
+    }
+
+    public void setY(float y) {
+        this.y = y;
+    }
+
+    public float getWidth() {
+        return width;
+    }
+
+    public void setWidth(float width) {
+        this.width = width;
+    }
+
+    public float getHeight() {
+        return height;
+    }
+
+    public void setHeight(float height) {
+        this.height = height;
+    }
+
     public static enum Filter {
 
         NUMBER(true),
@@ -346,38 +390,6 @@ public class TextFieldWidget implements Widget {
         public void setPattern(String pattern) {
             this.pattern = pattern;
         }
-    }
-
-    public float getX() {
-        return x;
-    }
-
-    public float getY() {
-        return y;
-    }
-
-    public float getWidth() {
-        return width;
-    }
-
-    public float getHeight() {
-        return height;
-    }
-
-    public void setX(float x) {
-        this.x = x;
-    }
-
-    public void setY(float y) {
-        this.y = y;
-    }
-
-    public void setWidth(float width) {
-        this.width = width;
-    }
-
-    public void setHeight(float height) {
-        this.height = height;
     }
 }
 

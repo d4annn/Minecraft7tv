@@ -29,7 +29,7 @@ public class Frame {
                 return;
             }
             current = (current + frames) - max - 1;
-            frame = 0;
+
     }
 
     public int getCurrent() {

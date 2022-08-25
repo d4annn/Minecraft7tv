@@ -1,11 +1,14 @@
 package com.dan.minecraft7tv.config;
 
+import com.dan.minecraft7tv.utils.EmoteUtils;
 import com.dan.minecraft7tv.utils.FileUtils;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import java.awt.*;
 import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Config {
 
@@ -16,9 +19,10 @@ public class Config {
     public Position textPos;
     public boolean fpsTick;
     public boolean toggle;
-    public int chatBackgroundColor;
     public int chatTextColor;
     public boolean deleteCache;
+    public boolean showDownload;
+    public List<EmoteCache> emotes;
 
     public Config() {
         setDefault();
@@ -37,9 +41,17 @@ public class Config {
         textPos = Position.CENTER;
         fpsTick = false;
         toggle = true;
-        chatBackgroundColor = 127 << 24;
         chatTextColor = -16777217;
         deleteCache = false;
+        showDownload = true;
+        emotes = new ArrayList<>();
+    }
+
+    public int getIndexByUrl(String url) {
+        for(EmoteCache emote : emotes) {
+            if(emote.getUrl().equals(url)) return emotes.indexOf(emote);
+        }
+        return -1;
     }
 
     public void saveConfig() {
@@ -48,7 +60,7 @@ public class Config {
             GSON.toJson(this, bw);
             bw.flush();
         } catch (IOException e) {
-            e.printStackTrace();
+            EmoteUtils.logError("Error occurred while saving config, check logs for more info.", e.getMessage());
         }
     }
 
@@ -69,7 +81,7 @@ public class Config {
                 setInstance(cf);
             }
         } catch (IOException e) {
-
+            EmoteUtils.logError("Error occurred while loading config, check logs for more info.", e.getMessage());
         }
     }
 

@@ -1,9 +1,12 @@
 package com.dan.minecraft7tv.utils;
 
+import net.fabricmc.loader.impl.util.log.Log;
+import net.fabricmc.loader.impl.util.log.LogCategory;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.NativeImageBackedTexture;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Matrix4f;
 import net.minecraft.util.math.Vector4f;
@@ -25,22 +28,25 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.logging.Logger;
 
 public class EmoteUtils {
 
+
+
     public static void loadGif(String link, String name) {
         try {
-            File finalGif = new File(FileUtils.FOLDER.getPath() + "\\" + name + "\\" + name + ".gif");
+            File finalGif = new File(FileUtils.FOLDER.getPath() + File.separator + name + File.separator + name + ".gif");
             if (finalGif.exists()) {
                 return;
             }
-            new File(FileUtils.FOLDER.getPath() + "\\" + name).mkdirs();
-            finalGif.createNewFile();
+            new File(FileUtils.FOLDER.getPath() + File.separator + name).mkdirs();
             URL url = new URL(link);
-            File file = new File(FileUtils.TEMP_FODLER.getPath() + "\\temp_" + name + ".webp");
+            File file = new File(FileUtils.FOLDER.getPath() + File.separator + name + File.separator + name + ".webp");
             file.mkdirs();
             file.createNewFile();
-            FileUtils.webpToGif(link, file, finalGif);
+            FileUtils.webpToGif(link, file);
+            GifFix.fix(finalGif);
         } catch (MalformedURLException e) {
             e.printStackTrace();
         } catch (IOException e) {
@@ -60,15 +66,20 @@ public class EmoteUtils {
     }
 
     public static void deleteEmoteCache(String name) {
-        File folder = new File(FileUtils.FOLDER.getPath() + "\\" + name);
+        File folder = new File(FileUtils.FOLDER.getPath() + File.separator + name);
         if(folder.exists() && folder.isDirectory()) {
             FileUtils.deleteDirectory(folder);
         }
     }
 
+    public static void logError(String description, String stackTracke) {
+        Logger.getLogger("Minecraft7tv").warning(description + "\n" + stackTracke);
+        MinecraftClient.getInstance().inGameHud.getChatHud().addMessage(Text.of("§3[Minecraft7tv]§r " + description));
+    }
+
     public static BufferedImage getFrame(String name, int index) {
         try {
-            return ImageIO.read(new File(FileUtils.FOLDER.getPath() + "\\" + name + "\\" + name + index + ".png"));
+            return ImageIO.read(new File(FileUtils.FOLDER.getPath() + File.separator + name + File.separator + name + index + ".png"));
         } catch (IOException e) {
         }
         return null;
@@ -92,13 +103,15 @@ public class EmoteUtils {
             ImageInputStream in = ImageIO.createImageInputStream(gif);
             reader.setInput(in);
             BufferedImage[] images = new BufferedImage[reader.getNumImages(true)];
-            File  out = new File(FileUtils.FOLDER.getPath() + "\\" + name);
-            out.mkdirs();
+            if(write) {
+                File out = new File(FileUtils.FOLDER.getPath() + File.separator + name);
+                out.mkdirs();
+            }
             for (int i = 0, count = reader.getNumImages(true); i < count; i++) {
                 BufferedImage image = reader.read(i);
                 images[i] = FileUtils.resizeImage(128, 128, image);
                 if (write) {
-                    ImageIO.write(image, "png", new File(FileUtils.FOLDER.getPath() + "\\" + name + "\\" + name + i + ".png"));
+                    ImageIO.write(image, "png", new File(FileUtils.FOLDER.getPath() + File.separator + name + File.separator + name + i + ".png"));
                 }
             }
             return images;

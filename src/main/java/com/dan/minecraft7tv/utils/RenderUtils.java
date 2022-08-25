@@ -12,9 +12,8 @@ import java.awt.*;
 
 public class RenderUtils {
 
-
     //bind texture first
-    public static void renderImage(Matrix4f matrix, float x0, float y0, int u, int v, float width, float height, int regionWidth, int regionHeight, int textureWidth, int textureHeight) {
+    public static void renderImage(Matrix4f matrix, float x0, float y0, int u, int v, float width, float height, int regionWidth, int regionHeight, int textureWidth, int textureHeight, float transparency) {
         float x1 = x0 + width;
         float y1 = y0 + height;
         int z = 1;
@@ -22,6 +21,9 @@ public class RenderUtils {
         float u1 = (u + (float) regionWidth) / (float) textureWidth;
         float v0 = (v + 0.0F) / (float) textureHeight;
         float v1 = (v + (float) regionHeight) / (float) textureHeight;
+        RenderSystem.enableBlend();
+        if (transparency != 1)
+            RenderSystem.setShaderColor(1, 1, 1, transparency);
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder bufferBuilder = tessellator.getBuffer();
         bufferBuilder.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE);
@@ -31,6 +33,7 @@ public class RenderUtils {
         bufferBuilder.vertex(matrix, (float) x1, (float) y0, (float) z).texture(u1, v0).next();
         bufferBuilder.vertex(matrix, (float) x0, (float) y0, (float) z).texture(u0, v0).next();
         Tessellator.getInstance().draw();
+        RenderSystem.disableBlend();
     }
 
     public static void renderQuad(MatrixStack matrices, float x1, float y1, float x2, float y2, int color) {
@@ -174,7 +177,6 @@ public class RenderUtils {
     }
 
 
-
     //for texts
     public static void positionAccurateScale(MatrixStack stack, float scale, double x, double y) {
         stack.translate(1, 1, 1);
@@ -199,8 +201,8 @@ public class RenderUtils {
 
     public static Color hex2Rgb(String colorStr) {
         return new Color(
-                Integer.valueOf( colorStr.substring( 1, 3 ), 16 ),
-                Integer.valueOf( colorStr.substring( 3, 5 ), 16 ),
-                Integer.valueOf( colorStr.substring( 5, 7 ), 16 ) );
+                Integer.valueOf(colorStr.substring(1, 3), 16),
+                Integer.valueOf(colorStr.substring(3, 5), 16),
+                Integer.valueOf(colorStr.substring(5, 7), 16));
     }
 }

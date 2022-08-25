@@ -1,10 +1,13 @@
 package com.dan.minecraft7tv.utils;
 
 import com.dan.minecraft7tv.emote.Buffers;
+import com.dan.minecraft7tv.emote.Emote;
 import com.dan.minecraft7tv.emote.EmoteRenderer;
 import com.dan.minecraft7tv.emote.RenderableEmote;
+import com.dan.minecraft7tv.gui.widget.DownloadingWidget;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.texture.NativeImage;
+import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.stb.STBImage;
@@ -18,22 +21,20 @@ import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.concurrent.ExecutionException;
 
 public class FileUtils {
 
-    public static final File FOLDER = new File(new File(MinecraftClient.getInstance().runDirectory, "config").getPath() + "\\Minecraft7tv");
-    public static final File TEMP_FODLER = new File(FOLDER.getPath() + "\\temp");
-    public static final File CONFIG = new File(FOLDER.getPath() + "\\config.json");
+    public static final File FOLDER = new File(new File(MinecraftClient.getInstance().runDirectory, "config").getPath() + File.separator + "Minecraft7tv");
+    public static final File CONFIG = new File(FOLDER.getPath() + File.separator + "config.json");
+    public static final File CONVERTER_FOLDER = new File(FOLDER.getPath() + File.separator + "converter");
 
-    public static void webpToGif(String url, File in, File out) {
+    public static void webpToGif(String url, File in) {
         try (InputStream is = new URL(url).openStream()) {
             Files.copy(is, in.toPath(), StandardCopyOption.REPLACE_EXISTING);
-            convertWebpToFif(in.getAbsolutePath(), out.getAbsolutePath());
+            convertWebpToGif(in.getAbsolutePath());
         } catch (IOException e) {
-            e.printStackTrace();
+            EmoteUtils.logError("Error occurred while creating an emote, check logs for more inof.", e.getMessage());
         }
     }
 
@@ -46,7 +47,7 @@ public class FileUtils {
         }
     }
 
-     public static boolean deleteDirectory(File path) {
+    public static boolean deleteDirectory(File path) {
         if (path.exists()) {
             File[] files = path.listFiles();
             for (int i = 0; i < files.length; i++) {
@@ -60,29 +61,68 @@ public class FileUtils {
         return (path.delete());
     }
 
-    public static void convertWebpToFif(String in, String out) {
-        ProcessBuilder processBuilder = new ProcessBuilder();
-        if (getOsName().startsWith("Windows")) {
-            processBuilder.command("cmd.exe", "/c", String.format("..\\lib\\ImageMagick-7.1.0\\magick.exe %s %s ", in, out));
-        } else {
-            processBuilder.command("bash", "-c", String.format("..\\lib\\ImageMagick-7.1.0\\magick %s %s ", in, out));
+    public static void initConverter() {
+        if (CONVERTER_FOLDER.exists()) {
+            return;
         }
+        CONVERTER_FOLDER.mkdirs();
+        InputStream webp2Gif = getInputStream("/assets/minecraft7tv/webp2gif.exe");
         try {
-            Process process = processBuilder.start();
-            StringBuilder output = new StringBuilder();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            String line;
-            while ((line = reader.readLine()) != null) {
-                output.append(line).append("\n");
-            }
-            int exitVal = process.waitFor();
-            if (exitVal == 0) {
-                System.out.println("Succefully converted");
-                //success
-            }
-        } catch (IOException | InterruptedException exception) {
-            exception.printStackTrace();
+            copy(webp2Gif, new File(CONVERTER_FOLDER.getPath() + File.separator + "converter.exe"));
+        } catch (Exception e) {
+            e.printStackTrace();
         }
+    }
+
+    private static InputStream getInputStream(String subPath) {
+        return FileUtils.class.getResourceAsStream(subPath);
+    }
+
+    private static void copy(InputStream in, File dest) throws IOException {
+        OutputStream out = new FileOutputStream(dest);
+        byte[] buffer = new byte[1024];
+        int length;
+        //copy the file content in bytes
+        while ((length = in.read(buffer)) > 0) {
+            out.write(buffer, 0, length);
+        }
+        dest.setExecutable(true);
+        in.close();
+        out.close();
+    }
+
+    public static void initLoading() {
+        try {
+            File folder = new File(FOLDER.getPath() + File.separator + "loading");
+            folder.mkdirs();
+            folder = new File(FOLDER.getPath() + File.separator + "loading" + File.separator + "loading.gif");
+            if (folder.createNewFile()) {
+                Identifier loadingIdentifier = new Identifier("minecraft7tv", "textures/loading.gif");
+                InputStream is = MinecraftClient.getInstance().getResourceManager().getResource(loadingIdentifier).getInputStream();
+                Files.copy(is, folder.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            }
+            DownloadingWidget.setLoadingEmote(new RenderableEmote(new Emote("loading")));
+        } catch (IOException e) {
+        }
+    }
+
+    public static void convertWebpToGif(String in) {
+        System.out.println("converting");
+        ProcessBuilder pb = new ProcessBuilder();
+        pb.command( CONVERTER_FOLDER.getAbsolutePath() + File.separator + "converter.exe", "-L255", "-u", in);
+        executeCommand(pb);
+    }
+
+    private static String executeCommand(ProcessBuilder processBuilder) {
+        StringBuilder output = new StringBuilder();
+        try {
+            Process p = processBuilder.start();
+            p.waitFor();
+        } catch (Exception e) {
+            System.out.println("Error occurred while converting image, try deleting converter folder in config!");
+            e.printStackTrace();
+        }
+        return "";
     }
 
     private static String getOsName() {
@@ -106,10 +146,6 @@ public class FileUtils {
         return true;
     }
 
-    /*
-     * All STB utils here
-     */
-
     public static BufferedImage resizeImage(int width, int height, BufferedImage image) {
         BufferedImage resizedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
         Graphics2D graphics2D = resizedImage.createGraphics();
@@ -118,10 +154,13 @@ public class FileUtils {
         return resizedImage;
     }
 
+    /*
+     * All STB utils here
+     */
+
     public static void checkConfig() {
         try {
             FOLDER.mkdirs();
-            TEMP_FODLER.mkdirs();
             CONFIG.createNewFile();
         } catch (Exception e) {
             e.printStackTrace();
@@ -169,7 +208,7 @@ public class FileUtils {
 
     //Call when closing the game
     public static void freeGifs() {
-        for(RenderableEmote emote : EmoteRenderer.getInstance().getEmotes()) {
+        for (RenderableEmote emote : EmoteRenderer.getInstance().getEmotes()) {
             STBImage.stbi_image_free(emote.getEmote().getBuffer().gifBytes);
         }
     }

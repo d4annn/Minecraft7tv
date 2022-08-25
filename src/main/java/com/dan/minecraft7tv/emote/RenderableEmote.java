@@ -2,24 +2,52 @@ package com.dan.minecraft7tv.emote;
 
 import com.dan.minecraft7tv.utils.EmoteUtils;
 import com.dan.minecraft7tv.utils.FileUtils;
-import net.minecraft.client.texture.NativeImage;
+import net.minecraft.client.texture.NativeImageBackedTexture;
 
 import java.io.File;
 
 public class RenderableEmote {
 
     private Emote emote;
-    private NativeImage image;
     private Frame frame;
+    private NativeImageBackedTexture[] images;
 
     public RenderableEmote(Emote emote) {
         this.emote = emote;
-        frame = new Frame(0, EmoteUtils.getGifSize(new File(
-                FileUtils.FOLDER.getPath() + "\\" + emote.getName() + "\\" + emote.getName() + ".gif")) - 1, 1);
+        if(emote.isGif()) {
+            frame = new Frame(0, EmoteUtils.getGifSize(new File(
+                    FileUtils.FOLDER.getPath() + File.separator + emote.getName() + File.separator + emote.getName() + ".gif")), 1);
+            images = new NativeImageBackedTexture[frame.getMax()];
+        } else {
+            images = new NativeImageBackedTexture[1];
+        }
     }
 
-    public NativeImage getImage() {
-        return image;
+    public boolean isImageEmpty(int i) {
+        return null == getImage(i);
+    }
+
+    public void setImage(int i, NativeImageBackedTexture texture) {
+        try {
+            if(!emote.isGif()) {
+                images[0] = texture;
+                return;
+            }
+            images[i] = texture;
+        } catch (IndexOutOfBoundsException e) {
+        }
+    }
+
+    public NativeImageBackedTexture getImage(int i) {
+        if(!this.emote.isGif()) return this.images[0];
+        if (i > this.images.length - 1) {
+            return this.images[this.images.length - 1];
+        }
+        return this.images[i];
+    }
+
+    public NativeImageBackedTexture[] getImages() {
+        return images;
     }
 
     public void nextFrame() {

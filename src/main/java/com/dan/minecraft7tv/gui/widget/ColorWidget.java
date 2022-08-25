@@ -49,7 +49,7 @@ public class ColorWidget extends SettingWidget {
             int hei = MinecraftClient.getInstance().getWindow().getScaledHeight();
             RenderSystem.setShaderTexture(0, this.palette);
             RenderSystem.texParameter(3553, 10241, 9728);
-            RenderUtils.renderImage(matrices.peek().getModel(), wid / 2 - 24, hei / 2 - 50, 0, 0, 100, 100, 256, 256, 256, 256);
+            RenderUtils.renderImage(matrices.peek().getModel(), wid / 2 - 24, hei / 2 - 50, 0, 0, 100, 100, 256, 256, 256, 256, 1);
         }
     }
 
@@ -74,7 +74,7 @@ public class ColorWidget extends SettingWidget {
                     this.currentColor = image.getRGB((int) mouseX - (wid / 2- 24), (int) mouseY - (hei / 2 - 50));
                     onValueChange(this.currentColor);
                 } catch (IndexOutOfBoundsException e) {
-                    e.printStackTrace();
+                    EmoteUtils.logError("Error occurred while trying to fetch color", e.getMessage());
                 }
                 this.selecting = false;
                 OptionsScreen.palette = null;

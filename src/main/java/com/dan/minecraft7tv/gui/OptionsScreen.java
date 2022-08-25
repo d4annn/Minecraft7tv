@@ -10,10 +10,17 @@ import com.dan.minecraft7tv.utils.RenderUtils;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.render.DiffuseLighting;
+import net.minecraft.client.render.GameRenderer;
+import net.minecraft.client.render.LightmapTextureManager;
+import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.entity.EntityType;
+import net.minecraft.entity.passive.WolfEntity;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.Vec3f;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -36,6 +43,7 @@ public class OptionsScreen extends Screen {
     private boolean leftHovered;
     private boolean rightHovered;
     private AddEmoteWidget widget;
+    private boolean resetHovered;
 
     public OptionsScreen(int preScale) {
         super(new TranslatableText("options.title"));
@@ -46,6 +54,7 @@ public class OptionsScreen extends Screen {
         folder = 1;
         leftHovered = false;
         rightHovered = false;
+        resetHovered = false;
     }
 
     @Override
@@ -92,16 +101,28 @@ public class OptionsScreen extends Screen {
         } catch (ConcurrentModificationException ignored) {
         }
 
-        if (this.rightHovered && this.folder < (int) Math.ceil(EmoteRenderer.getInstance().getEmotes().size() / 9f)) {
+        int a = (int) Math.ceil(EmoteRenderer.getInstance().getEmotes().size() / 9f);
+        if (this.rightHovered && this.folder < (int) Math.ceil(EmoteRenderer.getInstance().getEmotes().size() / 9f) && this.selectedTab == Tabs.EMOTES) {
             this.folder++;
+            onTabChanged(Tabs.EMOTES);
         }
-        if (this.leftHovered && this.folder > 1) {
+        if (this.leftHovered && this.folder > 1 && this.selectedTab == Tabs.EMOTES) {
             this.folder--;
+            onTabChanged(Tabs.EMOTES);
+        }
+        if (this.resetHovered) {
+            for (FolderWidget sett : settings) {
+                for (SettingWidget set : sett.getSettings()) {
+                    set.reset();
+                }
+            }
         }
         int tercio = width / 3;
         int menuWidth = (tercio * 2 + 25) - tercio - 25;
         if (mouseX >= (tercio) + menuWidth + 16 && mouseX <= (tercio) + menuWidth + 16 + 10 && mouseY >= 39 && mouseY <= 49) {
             FileUtils.open("https://github.com/d4annn/Minecraft7tv");
+        } else if (mouseX >= (tercio) + menuWidth + 5 && mouseX <= (tercio) + menuWidth + 5 + 10 && mouseY >= 39 && mouseY <= 49) {
+            FileUtils.open("https://discord.gg/aUnssJDhcG");
         }
         if (null != this.widget) {
             this.widget.onMouseClick(mouseX, mouseY);
@@ -131,7 +152,7 @@ public class OptionsScreen extends Screen {
         for (EmoteWidget emote : emotes) {
             emote.onMouseMoved(mouseX, mouseY);
         }
-        if(null != this.widget) {
+        if (null != this.widget) {
             this.widget.onMouseMoved(mouseX, mouseY);
         }
         super.mouseMoved(mouseX, mouseY);
@@ -210,9 +231,9 @@ public class OptionsScreen extends Screen {
         drawCenteredText(matrices, MinecraftClient.getInstance().textRenderer, "Minecraft7tv by §dDan", (tercio - 25) + menuWidth / 2 + 23, 39, new Color(255, 255, 255, 240).getRGB());
         matrices.pop();
         RenderSystem.setShaderTexture(0, this.DISCORD_IDENTIFIER);
-        RenderUtils.renderImage(matrices.peek().getModel(), tercio + menuWidth + 5, 39, 0, 0, 10, 10, 40, 40, 40, 40);
+        RenderUtils.renderImage(matrices.peek().getModel(), tercio + menuWidth + 5, 39, 0, 0, 10, 10, 40, 40, 40, 40, 1);
         RenderSystem.setShaderTexture(0, this.GITHUB_IDENTIFIER);
-        RenderUtils.renderImage(matrices.peek().getModel(), (tercio) + menuWidth + 16, 39, 0, 0, 10, 10, 40, 40, 40, 40);
+        RenderUtils.renderImage(matrices.peek().getModel(), (tercio) + menuWidth + 16, 39, 0, 0, 10, 10, 40, 40, 40, 40, 1);
         RenderUtils.renderQuad(matrices, (tercio - 25 - 4) + menuWidth / 3, 56, (tercio - 25) + (float) (menuWidth / 3 + 0.3 - 4), height - 56, new Color(255, 255, 255, 240).getRGB());
         if (this.selectedTab == Tabs.EMOTES) {
             float x = ((tercio - 25 - 4) + menuWidth / 3f + 4f + 7);
@@ -227,6 +248,13 @@ public class OptionsScreen extends Screen {
             this.rightHovered = mouseX >= (int) (x + 46 + 29 + 0.4) && mouseX <= (int) (x + 46 + 32 + 0.4) && mouseY >= 59 + 49 + 49 + 46 && mouseY <= 59 + 49 + 49 + 46 + textRenderer.fontHeight * 0.6f;
             text = this.rightHovered ? "§n>" : ">";
             textRenderer.draw(matrices, Text.of(text), (int) (x + 46 + textRenderer.getWidth("Page 1/" + (int) Math.ceil(EmoteRenderer.getInstance().getEmotes().size() / 9f)) * 0.6 + 21), 59 + 49 + 49 + 46, Color.WHITE.getRGB());
+            matrices.pop();
+        }
+        if (this.selectedTab == Tabs.SETTINGS || this.selectedTab == Tabs.EMOTE_SETTINGS || this.selectedTab == Tabs.SERVER_SETTINGS) {
+            matrices.push();
+            RenderUtils.positionAccurateScale(matrices, 0.7f, tercio * 2 + 5, height - 45);
+            this.resetHovered = mouseX >= tercio * 2 + 5 && mouseX <= tercio * 2 + 5 + textRenderer.getWidth("Reset") * 0.7f && mouseY >= height - 45 && mouseY <= height - 45 + textRenderer.fontHeight * 0.7;
+            textRenderer.draw(matrices, this.resetHovered ? "§nReset" : "Reset", tercio * 2 + 5, height - 45, Color.WHITE.getRGB());
             matrices.pop();
         }
         for (CategoryWidget text : categories) {
@@ -260,7 +288,9 @@ public class OptionsScreen extends Screen {
             this.categories.get(preIndex).setUnderlined(false);
             this.categories.get(preIndex).setColor(-1);
         }
-        this.folder = 1;
+        if (newTab != Tabs.EMOTES) {
+            this.folder = 1;
+        }
         this.widget = null;
         rightHovered = false;
         leftHovered = false;
@@ -276,23 +306,31 @@ public class OptionsScreen extends Screen {
     private void initSettings(Tabs tab) {
         int tercio = width / 3;
         int menuWidth = (tercio * 2 + 25) - tercio - 25;
+        int pages = (this.folder - 1) * 9;
         switch (tab) {
             case EMOTES:
                 int xGap = 0;
                 int yGap = 0;
                 for (RenderableEmote emote : EmoteRenderer.getInstance().getEmotes()) {
-                    emotes.add(new EmoteWidget(((tercio - 25 - 4) + menuWidth / 3 + 4f + 7) + xGap, 59 + yGap, emote, (aBoolean -> {
-                        onTabChanged(Tabs.EMOTES);
-                    })));
-                    xGap += 35;
-                    if (xGap > 70) {
-                        xGap = 0;
-                        yGap += 49;
+                    if (pages == 0) {
+                        emotes.add(new EmoteWidget(((tercio - 25 - 4) + menuWidth / 3 + 4f + 7) + xGap, 59 + yGap, emote, (aBoolean -> {
+                            onTabChanged(Tabs.EMOTES);
+                        })));
+                        xGap += 38;
+                        if (xGap > 110) {
+                            xGap = 0;
+                            yGap += 49;
+                            if (yGap > 140) {
+                                break;
+                            }
+                        }
+                    } else {
+                        pages--;
                     }
                 }
                 break;
             case ADD_EMOTE:
-                this.widget = new AddEmoteWidget((tercio - 25 - 4) + menuWidth / 3, 56,tercio * 2 + 25, height - 40, null);
+                this.widget = new AddEmoteWidget((tercio - 25 - 4) + menuWidth / 3, 56, tercio * 2 + 25, height - 40);
                 break;
             case EMOTE_SETTINGS:
                 settings.add(new FolderWidget((tercio - 25 - 4) + menuWidth / 3 + 4, 59, tercio * 2 + 21, 59 + 11, "Emote Size"));
@@ -307,6 +345,10 @@ public class OptionsScreen extends Screen {
                 settings.get(2).addSetting(new BooleanWidget(settings.get(0).getX() + 4, settings.get(0).getHeight() + 2, settings.get(0).getWidth() - 4, "Delete emote cache when removing the emote", Config.getInstance().deleteCache, false, (bool) -> {
                     Config.getInstance().deleteCache = bool;
                 }));
+                settings.add(new FolderWidget((tercio - 25 - 4) + menuWidth / 3 + 4, 59 + 33, tercio * 2 + 21, 59 + 44, "Download pop-up"));
+                settings.get(3).addSetting(new BooleanWidget(settings.get(0).getX() + 4, settings.get(0).getHeight() + 2, settings.get(0).getWidth() - 4, "Toggles the downloading emote pop-up", Config.getInstance().showDownload, true, (bool) -> {
+                    Config.getInstance().showDownload = bool;
+                }));
                 break;
             case SETTINGS:
                 settings.add(new FolderWidget((tercio - 25 - 4) + menuWidth / 3 + 4, 59, tercio * 2 + 21, 59 + 11, "Toggle"));
@@ -320,10 +362,6 @@ public class OptionsScreen extends Screen {
                 settings.add(new FolderWidget((tercio - 25 - 4) + menuWidth / 3 + 4, 59 + 33, tercio * 2 + 21, 59 + 44, "Text color"));
                 settings.get(2).addSetting(new ColorWidget(settings.get(2).getX() + 4, settings.get(2).getHeight() + 2, settings.get(2).getWidth() - 4, "Changes the color of the text of the chat", Config.getInstance().chatTextColor, -16777217, (c) -> {
                     Config.getInstance().chatTextColor = c;
-                }));
-                settings.add(new FolderWidget((tercio - 25 - 4) + menuWidth / 3 + 4, 59 + 44, tercio * 2 + 21, 59 + 55, "Background color"));
-                settings.get(3).addSetting(new ColorWidget(settings.get(3).getX() + 4, settings.get(3).getHeight() + 2, settings.get(3).getWidth() - 4, "Changes background color of the chat", Config.getInstance().chatBackgroundColor, 2130706432, (c) -> {
-                    Config.getInstance().chatBackgroundColor = c;
                 }));
                 break;
         }
