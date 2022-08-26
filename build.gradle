@@ -30,6 +30,7 @@ dependencies {
     annotationProcessor("com.github.LlamaLad7:MixinExtras:0.0.11")
     include (group: 'jmagick', name: 'jmagick', version: '6.6.9')
     implementation (group: 'jmagick', name: 'jmagick', version: '6.6.9')
+    modImplementation "com.ptsmods:devlogin:2.1"
 }
 
 processResources {
