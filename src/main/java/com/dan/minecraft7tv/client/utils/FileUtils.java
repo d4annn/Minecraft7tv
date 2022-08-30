@@ -21,13 +21,16 @@ import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.function.Consumer;
 
 public class FileUtils {
 
     public static final File FOLDER = new File(new File(MinecraftClient.getInstance().runDirectory, "config").getPath() + File.separator + "Minecraft7tv");
     public static final File CONFIG = new File(FOLDER.getPath() + File.separator + "config.json");
     public static final File CONVERTER_FOLDER = new File(FOLDER.getPath() + File.separator + "converter");
+    public static final File SERVER_EMOTES_FOLDER = new File(FOLDER.getPath() + File.separator + "server_emotes");
 
     public static void webpToGif(String url, File in) {
         try (InputStream is = new URL(url).openStream()) {
@@ -74,6 +77,25 @@ public class FileUtils {
         }
     }
 
+    public static boolean createDirectoriesIfMissing(Path dir) {
+        return createDirectoriesIfMissing(dir, "Failed to create the directory '%s'");
+    }
+
+    public static boolean createDirectoriesIfMissing(Path dir,  @Nullable String message) {
+        try {
+            if (!Files.isDirectory(dir)) {
+                Files.createDirectories(dir);
+            }
+        } catch (Exception e) {
+                System.out.printf((message) + "%n", dir.toAbsolutePath());
+
+
+            return false;
+        }
+
+        return Files.isDirectory(dir);
+    }
+
     private static InputStream getInputStream(String subPath) {
         return FileUtils.class.getResourceAsStream(subPath);
     }
@@ -107,9 +129,8 @@ public class FileUtils {
     }
 
     public static void convertWebpToGif(String in) {
-        System.out.println("converting");
         ProcessBuilder pb = new ProcessBuilder();
-        pb.command( CONVERTER_FOLDER.getAbsolutePath() + File.separator + "converter.exe", "-L255", "-u", in);
+        pb.command(CONVERTER_FOLDER.getAbsolutePath() + File.separator + "converter.exe", "-L255", "-u", in);
         executeCommand(pb);
     }
 
@@ -154,18 +175,19 @@ public class FileUtils {
         return resizedImage;
     }
 
-    /*
-     * All STB utils here
-     */
-
     public static void checkConfig() {
         try {
             FOLDER.mkdirs();
             CONFIG.createNewFile();
+            SERVER_EMOTES_FOLDER.mkdirs();
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
+
+    /*
+     * All STB utils here
+     */
 
     public static ByteBuffer getIsBuffer(InputStream inputStream) throws IOException {
         byte[] bytes = inputStream.readAllBytes();

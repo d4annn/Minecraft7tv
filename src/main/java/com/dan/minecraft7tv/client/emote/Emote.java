@@ -67,4 +67,8 @@ public class Emote {
     public boolean isGif() {
         return gif;
     }
+
+    public boolean isServer() {
+        return this instanceof ServerEmote;
+    }
 }

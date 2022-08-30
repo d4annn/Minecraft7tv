@@ -99,7 +99,7 @@ public class AddEmoteWidget implements Widget {
         nameField.onMouseClick(mouseX, mouseY);
         urlField.onMouseClick(mouseX, mouseY);
         if (this.doneHovered) {
-            new Thread(new DownloadThread(new EmoteCache(this.urlField.getText(), this.nameField.getText()))).start();
+            new Thread(new DownloadThread(new EmoteCache(this.urlField.getText(), this.nameField.getText()), false)).start();
             this.urlField.setText("");
             this.nameField.setText("");
         }

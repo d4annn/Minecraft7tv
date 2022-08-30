@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.dan.minecraft7tv.client.mixins",
+  "compatibilityLevel": "JAVA_16",
+  "client": [
+    "ChatHudMixin",
+    "MinecraftClientMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

@@ -373,11 +373,20 @@ public class OptionsScreen extends Screen {
                 settings.get(3).addSetting(new BooleanWidget(settings.get(0).getX() + 4, settings.get(0).getHeight() + 2, settings.get(0).getWidth() - 4, "Toggles shadow in chat text", Config.getInstance().showShadow, true, (bool) -> {
                     Config.getInstance().showShadow = bool;
                 }));
-                settings.add(new FolderWidget((tercio - 25 - 4) + menuWidth / 3 + 4, 59 + 55, tercio * 2 + 21, 59 + 66, "Shadow text"));
-                settings.get(4).addSetting(new BooleanWidget(settings.get(0).getX() + 4, settings.get(0).getHeight() + 2, settings.get(0).getWidth() - 4, "Toggles shadow in chat text", Config.getInstance().showShadow, true, (bool) -> {
-                    Config.getInstance().showShadow = bool;
-                }));
                 break;
+            case SERVER_SETTINGS:
+                settings.add(new FolderWidget((tercio - 25 - 4) + menuWidth / 3 + 4, 59, tercio * 2 + 21, 59 + 11, "Auto download"));
+                settings.get(0).addSetting(new BooleanWidget(settings.get(0).getX() + 4, settings.get(0).getHeight() + 2, settings.get(0).getWidth() - 4, "Automatically download server emotes on join", Config.getInstance().autoSync, true, (bool) -> {
+                    Config.getInstance().toggle = bool;
+                }));
+                settings.add(new FolderWidget((tercio - 25 - 4) + menuWidth / 3 + 4, 59 + 11, tercio * 2 + 21, 59 + 22, "Max emote amount"));
+                settings.get(1).addSetting(new IntegerSliderSetting(settings.get(0).getX() + 4, settings.get(0).getHeight() + 2, settings.get(0).getWidth() - 4, Config.getInstance().emoteAmount, 50, 5, 500, 1, 50, "Changes the maximum amount of emotes", (aInt -> {
+                    Config.getInstance().emoteAmount = aInt;
+                })));
+                settings.add(new FolderWidget((tercio - 25 - 4) + menuWidth / 3 + 4, 59 + 22, tercio * 2 + 21, 59 + 33, "Add server emotes"));
+                settings.get(2).addSetting(new BooleanWidget(settings.get(0).getX() + 4, settings.get(0).getHeight() + 2, settings.get(0).getWidth() - 4, "Keep server emotes on leave", Config.getInstance().addServerEmotes, true, (bool) -> {
+                    Config.getInstance().addServerEmotes = bool;
+                }));
         }
     }
 

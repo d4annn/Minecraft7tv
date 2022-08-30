@@ -1,5 +1,12 @@
 package com.dan.minecraft7tv.client.utils;
 
+import com.dan.minecraft7tv.client.config.Config;
+import com.dan.minecraft7tv.client.emote.Emote;
+import com.dan.minecraft7tv.client.emote.EmoteRenderer;
+import com.dan.minecraft7tv.client.emote.RenderableEmote;
+import com.dan.minecraft7tv.client.emote.ServerEmote;
+import com.dan.minecraft7tv.client.utils.datadump.DataDump;
+import com.dan.minecraft7tv.common.EmoteCache;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.NativeImageBackedTexture;
@@ -149,6 +156,52 @@ public class EmoteUtils {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    public static void processEmoteCache(List<EmoteCache> emoteCaches, boolean delete, boolean server) {
+        for (EmoteCache emote1 : emoteCaches) {
+            if(EmoteRenderer.getInstance().getEmotes().size() >= Config.getInstance().emoteAmount) return;
+            if (emote1.getUrl() == null || emote1.getName() == null) {
+                throw new IllegalStateException();
+            }
+            for (String e : EmoteRenderer.getInstance().getNames()) {
+                if (e.equals(emote1.getName())) {
+                    return;
+                }
+            }
+            for (RenderableEmote emote : EmoteRenderer.getInstance().getEmotes()) {
+                if (emote.getEmote().getUrl().equals(emote1.getUrl())) {
+                    return;
+                }
+            }
+            Emote emote;
+            emote = server ? new ServerEmote(emote1.getUrl(), emote1.getName()) : new Emote(emote1.getUrl(), emote1.getName());
+            if (null == emote.getBuffer() && emote.isGif()) {
+                return;
+            }
+            if(delete) EmoteRenderer.getInstance().removeRenderableEmote(emote1.getName(), true);
+            if(!Config.getInstance().contains(emote1)) {
+                Config.getInstance().emotes.add(emote1);
+            }
+            else EmoteRenderer.getInstance().addRenderableEmote(new RenderableEmote(emote));
+        }
+        Config.getInstance().saveConfig();
+    }
+
+    public static DataDump getEmotesDump(List<EmoteCache> emotes) {
+        DataDump dataDump = new DataDump(2, DataDump.Format.ASCII);
+        for(EmoteCache emote : emotes) {
+            dataDump.addData(emote.getName(), emote.getUrl());
+        }
+        dataDump.addTitle("Name", "URL");
+        dataDump.addHeader("Sigma emotes");
+        dataDump.setColumnProperties(0, DataDump.Alignment.LEFT, true);
+        dataDump.setColumnProperties(1, DataDump.Alignment.LEFT, true);
+        dataDump.setSort(true);
+        dataDump.setUseColumnSeparator(false);
+        dataDump.setCenterTitle(true);
+        dataDump.setRepeatTitleAtBottom(false);
+        return dataDump;
     }
 
     public static double[] getMatricesPos(int x, int y, int z, MatrixStack matrices) {

@@ -129,7 +129,7 @@ public class EmoteWidget implements Widget {
             if (Config.getInstance().deleteCache) {
                 EmoteUtils.deleteEmoteCache(this.emote.getEmote().getName());
             }
-            EmoteRenderer.getInstance().removeRenderableEmote(this.emote.getEmote().getName());
+            EmoteRenderer.getInstance().removeRenderableEmote(this.emote.getEmote().getName(), false);
             int index = Config.getInstance().getIndexByUrl(this.emote.getEmote().getUrl());
             if (index != -1) {
                 Config.getInstance().removeEmote(index);

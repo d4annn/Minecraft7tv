@@ -26,6 +26,7 @@ public class TextFieldWidget implements Widget {
     private int selectedChar;
     private int tick;
     private Filter filter;
+    private boolean ignoreWidth;
 
     public TextFieldWidget(float x, float y, float width, float height, Color color, Filter filter) {
         this.x = x + 3;
@@ -39,6 +40,7 @@ public class TextFieldWidget implements Widget {
         tick = 0;
         this.filter = filter;
         this.text = "";
+        ignoreWidth = false;
     }
 
     public String getSelectedText() {
@@ -93,6 +95,10 @@ public class TextFieldWidget implements Widget {
             RenderSystem.disableColorLogicOp();
             RenderSystem.enableTexture();
         }
+    }
+
+    public void setIgnoreWidth(boolean bool) {
+        this.ignoreWidth = bool;
     }
 
     @Override
@@ -270,6 +276,7 @@ public class TextFieldWidget implements Widget {
     }
 
     private String getRenderedText() {
+        if(this.ignoreWidth) return this.text;
         StringBuilder renderedText = new StringBuilder();
         for (char c : this.text.toCharArray()) {
             if (tr.getWidth(renderedText.toString() + c) * 0.6 <= this.width - this.x) {

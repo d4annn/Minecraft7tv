@@ -25,6 +25,10 @@ public class Config {
     public List<EmoteCache> emotes;
     public boolean showShadow;
 
+    public boolean autoSync;
+    public int emoteAmount;
+    public boolean addServerEmotes;
+
     public Config() {
         setDefault();
     }
@@ -47,6 +51,9 @@ public class Config {
         showDownload = true;
         emotes = new ArrayList<>();
         showShadow = true;
+        autoSync = true;
+        emoteAmount = 50;
+        addServerEmotes = true;
     }
 
     public void changeName(int index, String after) {
@@ -56,6 +63,15 @@ public class Config {
     public void removeEmote(int index) {
         if (emotes.size() > index)
             emotes.remove(index);
+    }
+
+    public boolean contains(EmoteCache emoteCache) {
+        for(EmoteCache emote : emotes) {
+            if(emote.getName().equalsIgnoreCase(emoteCache.getName()) && emote.getUrl().equalsIgnoreCase(emoteCache.getUrl())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public int getIndexByUrl(String url) {

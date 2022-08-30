@@ -13,14 +13,17 @@
   "license": "CC0-1.0",
   "icon": "assets/minecraft7tv/icon.png",
   "accessWidener": "minecraft7tv.accesswidener",
-  "environment": "client",
   "entrypoints": {
     "client": [
       "com.dan.minecraft7tv.client.Minecraft7tvClient"
+    ],
+    "server": [
+      "com.dan.minecraft7tv.server.Minecraft7tvServer"
     ]
   },
   "mixins": [
-    "minecraft7tv.mixins.json"
+    "minecraft7tvclient.mixins.json",
+    "minecraft7tvserver.mixins.json"
   ],
   "depends": {
     "fabricloader": ">=0.12",

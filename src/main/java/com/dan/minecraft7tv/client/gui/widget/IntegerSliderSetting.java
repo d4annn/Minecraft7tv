@@ -38,13 +38,12 @@ public class IntegerSliderSetting extends SettingWidget {
         this.def = def;
         value = new TextFieldWidget(getX() + 5 + 28 + 7, (float) (getY() + (getHeight() - getY()) / 2 - 0.25) - 5, getX() + 5 + 28 + 20, (float) (getY() + (getHeight() - getY()) / 2 - 0.25) + 5, new Color(10, 10, 29, 100), filter);
         value.setText(String.valueOf((int) (this.current)));
+        this.value.setIgnoreWidth(true);
     }
 
     @Override
     public void render(MatrixStack matrices) {
         super.render(matrices);
-        float a = (float) (getY() + (getHeight() - getY()) / 2 - 0.5);
-        float b = (float) (getY() + (getHeight() - getY()) / 2 + 0.5);
         RenderUtils.renderQuad(matrices, getX() + 5, (float) (getY() + (getHeight() - getY()) / 2 - 0.25), getX() + 5 + 28, (float) (getY() + (getHeight() - getY()) / 2 + 0.25), new Color(255, 255, 255, 200).getRGB());
         RenderUtils.renderCircle(matrices, new Color(255, 255, 255, 240), getX() + getCurrentStep() + 5, (float) (getY() + (getHeight() - getY()) / 2), 2, 220);
         this.value.render(matrices);
@@ -135,7 +134,7 @@ public class IntegerSliderSetting extends SettingWidget {
     @Override
     public void tick() {
         value.tick();
-        if (this.value.getText() != "" && !(Double.parseDouble(this.value.getText()) > Integer.MAX_VALUE)) {
+        if (!this.value.getText().equals("") && !(Double.parseDouble(this.value.getText()) > Integer.MAX_VALUE)) {
             if (this.current != Integer.parseInt(this.value.getText())) {
                 this.current = Integer.parseInt(this.value.getText());
                 onValueChanged();

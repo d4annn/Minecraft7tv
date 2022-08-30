@@ -12,6 +12,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(MinecraftClient.class)
 public class MinecraftClientMixin {
 
+    //lazy init cuz resource manager
     @Inject(method = "<init>", at = @At("TAIL"))
     private void startUpEmotes(RunArgs args, CallbackInfo ci) {
         FileUtils.initLoading();

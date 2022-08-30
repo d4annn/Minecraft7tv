@@ -44,12 +44,12 @@ public class EmoteRenderer {
     }
 
     public void addDownloading(DownloadingWidget emote) {
-        if(!Config.getInstance().showDownload) return;
+        if (!Config.getInstance().showDownload) return;
         this.downloadingEmotes.add(emote);
     }
 
     public void removeDownloading(DownloadingWidget emote) {
-        if(!Config.getInstance().showDownload) return;
+        if (!Config.getInstance().showDownload) return;
         this.downloadingEmotes.remove(emote);
     }
 
@@ -61,7 +61,7 @@ public class EmoteRenderer {
         this.emojis.add(emoji);
     }
 
-    public void removeRenderableEmote(String name) {
+    public void removeRenderableEmote(String name, boolean server) {
         int pos = -1;
         for (int i = 0; i < emojis.size(); i++) {
             if (emojis.get(i).getEmote().getName().equals(name)) {
@@ -69,7 +69,12 @@ public class EmoteRenderer {
             }
         }
         if (pos != -1) {
-            emojis.remove(pos);
+            if (server) {
+                if (emojis.get(pos).getEmote().isServer())
+                    emojis.remove(pos);
+            } else {
+                emojis.remove(pos);
+            }
         }
     }
 
