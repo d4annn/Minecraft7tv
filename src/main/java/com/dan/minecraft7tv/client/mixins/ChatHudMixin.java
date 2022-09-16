@@ -102,30 +102,27 @@ public abstract class ChatHudMixin extends DrawableHelper implements ChatHudAcce
         if (index == -1) return true;
         String line = I18nUtils.textToString(text);
         List<String> namesFound = getEmotes(line);
+        if (Config.getInstance().chatTextColor != -16777217) {
+            color = Config.getInstance().chatTextColor;
+        }
         if (namesFound.isEmpty()) {
-            if (Config.getInstance().chatTextColor != -16777217) {
-                renderText(matrices, instance, text, x, y, Config.getInstance().chatTextColor);
-                cycle++;
-                return false;
-            } else {
-                boolean bl = this.isChatFocused();
-                int n = this.tickDelta - this.visibleMessages.get(index + this.scrolledLines).getCreationTick();
-                float f = (float) this.getChatScale();
-                int k = MathHelper.ceil((float) this.getWidth() / f);
-                double g = 9.0D * (this.client.options.chatLineSpacing + 1.0D);
-                double s = (double) (-index) * g;
-                int z = (int) (s - g);
-                double e = this.client.options.textBackgroundOpacity;
-                double o = bl ? 1.0D : ChatHud.getMessageOpacityMultiplier(n);
-                int q = (int) (255.0D * o * e);
-                boolean hasGif = EmoteRenderer.getInstance().isEmoji(line);
-                int y2 = (int) y - gap;
-                int size = (int) Config.getInstance().emoteSize;
-                fill(matrices, -4, z - gap, k + 4, (int) s - gap, q << 24);
-                cycle++;
-                renderText(matrices, instance, text, x, y2, color);
-                return false;
-            }
+            boolean bl = this.isChatFocused();
+            int n = this.tickDelta - this.visibleMessages.get(index + this.scrolledLines).getCreationTick();
+            float f = (float) this.getChatScale();
+            int k = MathHelper.ceil((float) this.getWidth() / f);
+            double g = 9.0D * (this.client.options.chatLineSpacing + 1.0D);
+            double s = (double) (-index) * g;
+            int z = (int) (s - g);
+            double e = this.client.options.textBackgroundOpacity;
+            double o = bl ? 1.0D : ChatHud.getMessageOpacityMultiplier(n);
+            int q = (int) (255.0D * o * e);
+            boolean hasGif = EmoteRenderer.getInstance().isEmoji(line);
+            int y2 = (int) y - gap;
+            int size = (int) Config.getInstance().emoteSize;
+            fill(matrices, -4, z - gap, k + 4, (int) s - gap, q << 24);
+            cycle++;
+            renderText(matrices, instance, text, x, y2, color);
+            return false;
         }
         renderEmojiLine(instance, matrices, line, namesFound, (int) x, (int) y, text, color, index);
         cycle++;
@@ -237,31 +234,30 @@ public abstract class ChatHudMixin extends DrawableHelper implements ChatHudAcce
 
                 Style style1 = Style.EMPTY;
                 boolean siblings = false;
-                if (Config.getInstance().chatTextColor == -16777217) {
-                    for (ChatHudLine<Text> text : this.messages) {
-                        if (siblings) break;
-                        if (text.getText() instanceof TranslatableText tText) {
-                            if (!tText.getString().equals(line)) continue;
-                            for (Object arg : tText.getArgs()) {
-                                if (arg instanceof LiteralText text1) {
-                                    if (text1.getString().equals(word)) {
-                                        if (!text1.getSiblings().isEmpty()) {
-                                            //setting last and real real word
-                                            AtomicBoolean settedFirst = new AtomicBoolean(false);
-                                            AtomicInteger lastWordIndex = new AtomicInteger();
-                                            AtomicInteger firstWordIndex = new AtomicInteger();
-                                            text1.getSiblings().forEach((literalText) -> {
-                                                if (!literalText.getString().isEmpty() && !literalText.getString().equals(" ")) {
-                                                    if (!settedFirst.get()) {
-                                                        firstWordIndex.set(text1.getSiblings().indexOf(literalText));
-                                                        settedFirst.set(true);
-                                                    }
-                                                    lastWordIndex.set(text1.getSiblings().indexOf(literalText));
+                for (ChatHudLine<Text> text : this.messages) {
+                    if (siblings) break;
+                    if (text.getText() instanceof TranslatableText tText) {
+                        if (!tText.getString().equals(line)) continue;
+                        for (Object arg : tText.getArgs()) {
+                            if (arg instanceof LiteralText text1) {
+                                if (text1.getString().equals(word)) {
+                                    if (!text1.getSiblings().isEmpty()) {
+                                        //setting last and real real word
+                                        AtomicBoolean settedFirst = new AtomicBoolean(false);
+                                        AtomicInteger lastWordIndex = new AtomicInteger();
+                                        AtomicInteger firstWordIndex = new AtomicInteger();
+                                        text1.getSiblings().forEach((literalText) -> {
+                                            if (!literalText.getString().isEmpty() && !literalText.getString().equals(" ")) {
+                                                if (!settedFirst.get()) {
+                                                    firstWordIndex.set(text1.getSiblings().indexOf(literalText));
+                                                    settedFirst.set(true);
                                                 }
-                                            });
-                                            //setting the first real word
-                                            for (int j = 0; j < text1.getSiblings().size(); j++) {
-                                                LiteralText lText = (LiteralText) text1.getSiblings().get(j);
+                                                lastWordIndex.set(text1.getSiblings().indexOf(literalText));
+                                            }
+                                        });
+                                        //setting the first real word
+                                        for (int j = 0; j < text1.getSiblings().size(); j++) {
+                                            if (text1.getSiblings().get(j) instanceof LiteralText lText) {
                                                 if (isEmpty(lText.getStyle()) && !isEmpty(text1.getStyle())) {
                                                     lText.setStyle(text1.getStyle());
                                                 }
@@ -275,35 +271,36 @@ public abstract class ChatHudMixin extends DrawableHelper implements ChatHudAcce
                                                     currentX += tr.getWidth(space);
                                                 }
                                             }
-                                            siblings = true;
                                         }
+                                        siblings = true;
                                     }
-                                } else if (arg instanceof TranslatableText text3) {
-                                    for (Object arg1 : text3.getArgs()) {
-                                        if (arg1 instanceof LiteralText text2) {
-                                            if (text2.getString().equals(word.replaceAll("\\[|\\]", ""))) {
-                                                renderText(matrices, tr, new LiteralText(word).setStyle(text3.getStyle()), currentX, y2, color);
-                                                currentX += tr.getWidth(word);
-                                                siblings = true;
-                                                break;
-                                            }
+                                }
+                            } else if (arg instanceof TranslatableText text3) {
+                                for (Object arg1 : text3.getArgs()) {
+                                    if (arg1 instanceof LiteralText text2) {
+                                        if (text2.getString().equals(word.replaceAll("\\[|\\]", ""))) {
+                                            renderText(matrices, tr, new LiteralText(word).setStyle(text3.getStyle()), currentX, y2, color);
+                                            currentX += tr.getWidth(word);
+                                            siblings = true;
+                                            break;
                                         }
                                     }
                                 }
                             }
-                        } else if (text.getText() instanceof LiteralText lText) {
-                            //text send by server
-                            if (lText.getString().equals(word)) {
-                                if (!lText.getSiblings().isEmpty()) {
-                                    //setting last real word
-                                    AtomicInteger lastWordIndex = new AtomicInteger();
-                                    lText.getSiblings().forEach((literalText) -> {
-                                        if (!literalText.getString().isEmpty() && !literalText.getString().equals(" ")) {
-                                            lastWordIndex.set(lText.getSiblings().indexOf(literalText));
-                                        }
-                                    });
-                                    for (int j = 0; j < lText.getSiblings().size(); j++) {
-                                        LiteralText literalText = (LiteralText) lText.getSiblings().get(j);
+                        }
+                    } else if (text.getText() instanceof LiteralText lText) {
+                        //text send by server
+                        if (lText.getString().equals(word)) {
+                            if (!lText.getSiblings().isEmpty()) {
+                                //setting last real word
+                                AtomicInteger lastWordIndex = new AtomicInteger();
+                                lText.getSiblings().forEach((literalText) -> {
+                                    if (!literalText.getString().isEmpty() && !literalText.getString().equals(" ")) {
+                                        lastWordIndex.set(lText.getSiblings().indexOf(literalText));
+                                    }
+                                });
+                                for (int j = 0; j < lText.getSiblings().size(); j++) {
+                                    if (lText.getSiblings().get(j) instanceof LiteralText literalText) {
                                         if (literalText.getStyle().isEmpty() && !lText.getStyle().isEmpty()) {
                                             literalText.setStyle(lText.getStyle());
                                         }
@@ -316,9 +313,8 @@ public abstract class ChatHudMixin extends DrawableHelper implements ChatHudAcce
                                             }
                                             currentX += tr.getWidth(space);
                                         }
-                                        siblings = true;
                                     }
-                                    continue;
+                                    siblings = true;
                                 }
                             }
                         }

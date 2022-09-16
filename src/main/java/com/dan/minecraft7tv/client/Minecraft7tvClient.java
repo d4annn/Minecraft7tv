@@ -62,7 +62,7 @@ public class Minecraft7tvClient implements ClientModInitializer {
         ClientTickEvents.START_CLIENT_TICK.register(client -> {
             if (OPEN_OPTIONS_MENU.wasPressed()) {
                 int preButton = MinecraftClient.getInstance().options.guiScale;
-                client.setScreen(new OptionsScreen(preButton));
+                client.setScreen(new OptionsScreen());
                 MinecraftClient.getInstance().options.guiScale = 4;
                 MinecraftClient.getInstance().onResolutionChanged();
             }
@@ -134,6 +134,6 @@ public class Minecraft7tvClient implements ClientModInitializer {
         });
     }
 
-    //TODO: menu scroll
+    //TODO: Comprobar server emotes config
     //TODO: remove awt
 }

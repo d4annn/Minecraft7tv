@@ -18,7 +18,6 @@ public class DownloadThread implements Runnable {
     public void run() {
         for (String e : EmoteRenderer.getInstance().getNames()) {
             if (e.equals(this.downloadable.getName())) {
-                //TODO: error this name exists
                 return;
             }
         }

@@ -49,8 +49,8 @@ public class EmoteUtils {
             File file = new File(FileUtils.FOLDER.getPath() + File.separator + name + File.separator + name + ".webp");
             file.mkdirs();
             file.createNewFile();
-            FileUtils.webpToGif(link, file);
-//            GifFix.fix(finalGif);
+            FileUtils.webpToGif(link, file, finalGif);
+            GifFix.fix(finalGif);
         } catch (MalformedURLException e) {
             e.printStackTrace();
         } catch (IOException e) {

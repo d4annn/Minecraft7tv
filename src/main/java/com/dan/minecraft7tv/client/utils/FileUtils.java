@@ -30,12 +30,13 @@ public class FileUtils {
     public static final File FOLDER = new File(new File(MinecraftClient.getInstance().runDirectory, "config").getPath() + File.separator + "Minecraft7tv");
     public static final File CONFIG = new File(FOLDER.getPath() + File.separator + "config.json");
     public static final File CONVERTER_FOLDER = new File(FOLDER.getPath() + File.separator + "converter");
+    public static final File CONVERTER_FILE =  new File(CONVERTER_FOLDER.getPath() + File.separator + "magick.exe");
     public static final File SERVER_EMOTES_FOLDER = new File(FOLDER.getPath() + File.separator + "server_emotes");
 
-    public static void webpToGif(String url, File in) {
+    public static void webpToGif(String url, File in, File out) {
         try (InputStream is = new URL(url).openStream()) {
             Files.copy(is, in.toPath(), StandardCopyOption.REPLACE_EXISTING);
-            convertWebpToGif(in.getAbsolutePath());
+            convertWebpToGif(in.getAbsolutePath(), out.getAbsolutePath());
         } catch (IOException e) {
             EmoteUtils.logError("Error occurred while creating an emote, check logs for more inof.", e.getMessage());
         }
@@ -65,13 +66,13 @@ public class FileUtils {
     }
 
     public static void initConverter() {
-        if (CONVERTER_FOLDER.exists()) {
+        if (CONVERTER_FOLDER.exists() && CONVERTER_FILE.exists()) {
             return;
         }
         CONVERTER_FOLDER.mkdirs();
-        InputStream webp2Gif = getInputStream("/assets/minecraft7tv/webp2gif.exe");
+        InputStream webp2Gif = getInputStream("/assets/minecraft7tv/magick.exe");
         try {
-            copy(webp2Gif, new File(CONVERTER_FOLDER.getPath() + File.separator + "converter.exe"));
+            org.apache.commons.io.FileUtils.copyInputStreamToFile(webp2Gif, CONVERTER_FILE);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -88,8 +89,6 @@ public class FileUtils {
             }
         } catch (Exception e) {
                 System.out.printf((message) + "%n", dir.toAbsolutePath());
-
-
             return false;
         }
 
@@ -98,19 +97,6 @@ public class FileUtils {
 
     private static InputStream getInputStream(String subPath) {
         return FileUtils.class.getResourceAsStream(subPath);
-    }
-
-    private static void copy(InputStream in, File dest) throws IOException {
-        OutputStream out = new FileOutputStream(dest);
-        byte[] buffer = new byte[1024];
-        int length;
-        //copy the file content in bytes
-        while ((length = in.read(buffer)) > 0) {
-            out.write(buffer, 0, length);
-        }
-        dest.setExecutable(true);
-        in.close();
-        out.close();
     }
 
     public static void initLoading() {
@@ -128,11 +114,41 @@ public class FileUtils {
         }
     }
 
+    /*
     public static void convertWebpToGif(String in) {
         ProcessBuilder pb = new ProcessBuilder();
         pb.command(CONVERTER_FOLDER.getAbsolutePath() + File.separator + "converter.exe", "-L255", "-u", in);
         executeCommand(pb);
     }
+
+     */
+    public static void convertWebpToGif(String in, String out) {
+        ProcessBuilder processBuilder = new ProcessBuilder();
+        if (getOsName().startsWith("Windows")) {
+            processBuilder.command("cmd.exe", "/c", String.format(CONVERTER_FILE.getAbsolutePath() + " %s -coalesce %s ", in, out));
+        } else {
+            processBuilder.command("bash", "-c", String.format("magick %s %s ", in, out));
+        }
+
+        try {
+            Process process = processBuilder.start();
+            StringBuilder output = new StringBuilder();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                output.append(line).append("\n");
+            }
+
+            int exitVal = process.waitFor();
+            if (exitVal == 0) {
+                System.out.println("Succefully converted");
+                //success
+            }
+        } catch (IOException | InterruptedException exception) {
+            exception.printStackTrace();
+        }
+    }
+
 
     private static String executeCommand(ProcessBuilder processBuilder) {
         StringBuilder output = new StringBuilder();
@@ -209,7 +225,6 @@ public class FileUtils {
                 IntBuffer intBuffer4 = memoryStack.mallocInt(1);
                 PointerBuffer pointerBuffer = memoryStack.callocPointer(1);
                 int form = format == null ? 0 : channel(format);
-                System.out.println(STBImage.stbi_failure_reason());
                 ByteBuffer byteBuffer = STBImage.stbi_load_gif_from_memory(buffer, pointerBuffer, intBuffer, intBuffer2, intBuffer3, intBuffer4, form);
                 if (byteBuffer == null) {
                     System.out.println(STBImage.stbi_failure_reason());

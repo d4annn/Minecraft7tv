@@ -27,7 +27,7 @@ public class OptionsScreen extends Screen {
     private final Identifier DISCORD_IDENTIFIER = new Identifier("minecraft7tv", "textures/social/discord.png");
     private final Identifier GITHUB_IDENTIFIER = new Identifier("minecraft7tv", "textures/social/github.png");
     private final Color backColor = new Color(12, 15, 28, 240);
-    private int preScale;
+    private int preScale = 2;
     private List<CategoryWidget> categories;
     private List<FolderWidget> settings;
     private List<EmoteWidget> emotes;
@@ -38,9 +38,8 @@ public class OptionsScreen extends Screen {
     private AddEmoteWidget widget;
     private boolean resetHovered;
 
-    public OptionsScreen(int preScale) {
+    public OptionsScreen() {
         super(new TranslatableText("options.title"));
-        this.preScale = preScale;
         categories = new ArrayList<>();
         settings = new ArrayList<>();
         emotes = new ArrayList<>();
@@ -215,6 +214,9 @@ public class OptionsScreen extends Screen {
 
     @Override
     public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
+//        preScale = client.options.guiScale;
+//        client.options.guiScale = 2;
+//        client.onResolutionChanged();
         Color c = new Color(24, 34, 62, 240);
         int tercio = width / 3;
         RenderUtils.renderBoxWithRoundCorners(matrices.peek().getModel(), tercio - 25, 40, tercio * 2 + 25, height - 40, 7, c);
@@ -273,6 +275,8 @@ public class OptionsScreen extends Screen {
             this.widget.render(matrices);
         }
         super.render(matrices, mouseX, mouseY, delta);
+//        client.options.guiScale = preScale;
+//        client.onResolutionChanged();
     }
 
     private void onTabChanged(Tabs newTab) {
@@ -373,6 +377,7 @@ public class OptionsScreen extends Screen {
                 settings.get(3).addSetting(new BooleanWidget(settings.get(0).getX() + 4, settings.get(0).getHeight() + 2, settings.get(0).getWidth() - 4, "Toggles shadow in chat text", Config.getInstance().showShadow, true, (bool) -> {
                     Config.getInstance().showShadow = bool;
                 }));
+                RenderSystem.disableScissor();
                 break;
             case SERVER_SETTINGS:
                 settings.add(new FolderWidget((tercio - 25 - 4) + menuWidth / 3 + 4, 59, tercio * 2 + 21, 59 + 11, "Auto download"));
@@ -393,8 +398,6 @@ public class OptionsScreen extends Screen {
     @Override
     public void onClose() {
         Config.getInstance().saveConfig();
-        client.options.guiScale = preScale;
-        client.onResolutionChanged();
         super.onClose();
     }
 
