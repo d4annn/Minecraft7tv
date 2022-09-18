@@ -23,11 +23,13 @@ import java.util.List;
 public class OptionsScreen extends Screen {
 
     public static ColorWidget palette;
+    public static Tabs currentTab;
 
     private final Identifier DISCORD_IDENTIFIER = new Identifier("minecraft7tv", "textures/social/discord.png");
     private final Identifier GITHUB_IDENTIFIER = new Identifier("minecraft7tv", "textures/social/github.png");
+    private final Identifier PAYPAL_IDENTIFIER = new Identifier("minecraft7tv", "textures/social/paypal.png");
     private final Color backColor = new Color(12, 15, 28, 240);
-    private int preScale = 2;
+    private int preScale = 4;
     private List<CategoryWidget> categories;
     private List<FolderWidget> settings;
     private List<EmoteWidget> emotes;
@@ -47,10 +49,14 @@ public class OptionsScreen extends Screen {
         leftHovered = false;
         rightHovered = false;
         resetHovered = false;
+        preScale = MinecraftClient.getInstance().options.guiScale;
+        MinecraftClient.getInstance().options.guiScale = 4;
+        MinecraftClient.getInstance().onResolutionChanged();
     }
 
     @Override
     protected void init() {
+
         palette = null;
         widget = null;
         super.init();
@@ -115,6 +121,8 @@ public class OptionsScreen extends Screen {
             FileUtils.open("https://github.com/d4annn/Minecraft7tv");
         } else if (mouseX >= (tercio) + menuWidth + 5 && mouseX <= (tercio) + menuWidth + 5 + 10 && mouseY >= 39 && mouseY <= 49) {
             FileUtils.open("https://discord.gg/aUnssJDhcG");
+        } else if (mouseX >= (tercio) + menuWidth - 6 && mouseX <= (tercio) + menuWidth - 6 + 10 && mouseY >= 39 && mouseY <= 49) {
+            FileUtils.open("https://www.paypal.com/donate/?hosted_button_id=NRWH79PBJHPZJ");
         }
         if (null != this.widget) {
             this.widget.onMouseClick(mouseX, mouseY);
@@ -214,9 +222,6 @@ public class OptionsScreen extends Screen {
 
     @Override
     public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-//        preScale = client.options.guiScale;
-//        client.options.guiScale = 2;
-//        client.onResolutionChanged();
         Color c = new Color(24, 34, 62, 240);
         int tercio = width / 3;
         RenderUtils.renderBoxWithRoundCorners(matrices.peek().getModel(), tercio - 25, 40, tercio * 2 + 25, height - 40, 7, c);
@@ -229,6 +234,8 @@ public class OptionsScreen extends Screen {
         RenderUtils.renderImage(matrices.peek().getModel(), tercio + menuWidth + 5, 39, 0, 0, 10, 10, 40, 40, 40, 40, 1);
         RenderSystem.setShaderTexture(0, this.GITHUB_IDENTIFIER);
         RenderUtils.renderImage(matrices.peek().getModel(), (tercio) + menuWidth + 16, 39, 0, 0, 10, 10, 40, 40, 40, 40, 1);
+        RenderSystem.setShaderTexture(0, this.PAYPAL_IDENTIFIER);
+        RenderUtils.renderImage(matrices.peek().getModel(), (tercio) + menuWidth - 5, 40, 0, 0, 8, 8, 40, 40, 40, 40, 1);
         RenderUtils.renderQuad(matrices, (tercio - 25 - 4) + menuWidth / 3, 56, (tercio - 25) + (float) (menuWidth / 3 + 0.3 - 4), height - 56, new Color(255, 255, 255, 240).getRGB());
         if (this.selectedTab == Tabs.EMOTES) {
             float x = ((tercio - 25 - 4) + menuWidth / 3f + 4f + 7);
@@ -275,11 +282,12 @@ public class OptionsScreen extends Screen {
             this.widget.render(matrices);
         }
         super.render(matrices, mouseX, mouseY, delta);
-//        client.options.guiScale = preScale;
-//        client.onResolutionChanged();
+//        int i1 = MinecraftClient.getInstance().getWindow().calculateScaleFactor(client.options.guiScale, MinecraftClient.getInstance().forcesUnicodeFont());
+//        MinecraftClient.getInstance().getWindow().setScaleFactor(i1);
     }
 
     private void onTabChanged(Tabs newTab) {
+        currentTab = newTab;
         RenderSystem.disableScissor();
         if (null != this.selectedTab) {
             int preIndex = this.selectedTab.ordinal();
@@ -398,6 +406,9 @@ public class OptionsScreen extends Screen {
     @Override
     public void onClose() {
         Config.getInstance().saveConfig();
+        client.options.guiScale = preScale;
+        MinecraftClient.getInstance().onResolutionChanged();
+        currentTab = null;
         super.onClose();
     }
 

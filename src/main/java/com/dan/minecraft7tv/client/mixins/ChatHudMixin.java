@@ -53,6 +53,11 @@ public abstract class ChatHudMixin extends DrawableHelper implements ChatHudAcce
     private List<String> current = new ArrayList<>();
     private int gap = 0;
     private int cycle = 0;
+    private List<String> renderedWords = new ArrayList<>();
+    private boolean allowLeft = true;
+    private boolean allowRight = true;
+    private boolean allowAll = false;
+
     @Shadow
     private long lastMessageAddedTime;
 
@@ -77,6 +82,8 @@ public abstract class ChatHudMixin extends DrawableHelper implements ChatHudAcce
     @Shadow
     @Nullable
     public abstract Style getText(double x, double y);
+
+    @Shadow public abstract void render(MatrixStack matrices, int tickDelta);
 
     private List<String> getEmotes(String line) {
         List<String> result = new ArrayList<>();
@@ -126,6 +133,10 @@ public abstract class ChatHudMixin extends DrawableHelper implements ChatHudAcce
         }
         renderEmojiLine(instance, matrices, line, namesFound, (int) x, (int) y, text, color, index);
         cycle++;
+        renderedWords.clear();
+        allowLeft = true;
+        allowRight = true;
+        allowAll = false;
         return false;
     }
 
@@ -208,11 +219,16 @@ public abstract class ChatHudMixin extends DrawableHelper implements ChatHudAcce
         for (int i = 0; i < words.size(); i++) {
             String word = words.get(i);
             if (words.get(0).equals("<") && words.get(2).equals(">")) {
-                if (i > 3)
+                if (i > 3) {
                     currentX += tr.getWidth(" ");
+                    renderedWords.add(" ");
+                }
+
             } else {
-                if (i != 0)
+                if (i != 0) {
                     currentX += tr.getWidth(" ");
+                    renderedWords.add(" ");
+                }
             }
             if (emojis.contains(word)) {
                 //emoji detected :eyes:
@@ -238,11 +254,12 @@ public abstract class ChatHudMixin extends DrawableHelper implements ChatHudAcce
                     if (siblings) break;
                     if (text.getText() instanceof TranslatableText tText) {
                         if (!tText.getString().equals(line)) continue;
-                        for (Object arg : tText.getArgs()) {
+                        for (int l = 0; l < tText.getArgs().length; l++) {
+                            Object arg = tText.getArgs()[l];
                             if (arg instanceof LiteralText text1) {
-                                if (text1.getString().equals(word)) {
+                                if (text1.getString().equals(word) || text1.getString().equals("") && (l == 0 || l == 2)) {
                                     if (!text1.getSiblings().isEmpty()) {
-                                        //setting last and real real word
+                                        //setting last and first real word
                                         AtomicBoolean settedFirst = new AtomicBoolean(false);
                                         AtomicInteger lastWordIndex = new AtomicInteger();
                                         AtomicInteger firstWordIndex = new AtomicInteger();
@@ -255,20 +272,22 @@ public abstract class ChatHudMixin extends DrawableHelper implements ChatHudAcce
                                                 lastWordIndex.set(text1.getSiblings().indexOf(literalText));
                                             }
                                         });
-                                        //setting the first real word
                                         for (int j = 0; j < text1.getSiblings().size(); j++) {
                                             if (text1.getSiblings().get(j) instanceof LiteralText lText) {
                                                 if (isEmpty(lText.getStyle()) && !isEmpty(text1.getStyle())) {
                                                     lText.setStyle(text1.getStyle());
                                                 }
-                                                renderText(matrices, tr, lText, currentX, y2, color);
-                                                currentX += tr.getWidth(lText.getString());
-                                                if (j < lastWordIndex.get() && j >= firstWordIndex.get()) {
-                                                    String space = " ";
-                                                    if (lText.getStyle().isBold() || lText.getStyle().isBold()) {
-                                                        space += " ";
+                                                if (allowText(lText.getString())) {
+                                                    renderText(matrices, tr, lText, currentX, y2, color);
+                                                    currentX += tr.getWidth(lText.getString());
+                                                    if (j < lastWordIndex.get() && j >= firstWordIndex.get()) {
+                                                        String space = " ";
+                                                        if (lText.getStyle().isBold() || lText.getStyle().isBold()) {
+                                                            space += " ";
+                                                        }
+                                                        currentX += tr.getWidth(space);
+                                                        renderedWords.add(space);
                                                     }
-                                                    currentX += tr.getWidth(space);
                                                 }
                                             }
                                         }
@@ -289,7 +308,7 @@ public abstract class ChatHudMixin extends DrawableHelper implements ChatHudAcce
                             }
                         }
                     } else if (text.getText() instanceof LiteralText lText) {
-                        //text send by server
+                        //text sent by server
                         if (lText.getString().equals(word)) {
                             if (!lText.getSiblings().isEmpty()) {
                                 //setting last real word
@@ -319,7 +338,7 @@ public abstract class ChatHudMixin extends DrawableHelper implements ChatHudAcce
                             }
                         }
                     }
-                    if (!siblings) {
+                    if (!siblings && allowText(word)) {
                         renderText(matrices, tr, new LiteralText(word).setStyle(style1), currentX, y2, color);
                         currentX += tr.getWidth(word);
                     }
@@ -329,6 +348,7 @@ public abstract class ChatHudMixin extends DrawableHelper implements ChatHudAcce
     }
 
     private void renderText(MatrixStack matrices, TextRenderer textRenderer, Text text, int x, int y, int color) {
+        renderedWords.add(text.getString());
         if (Config.getInstance().showShadow)
             textRenderer.drawWithShadow(matrices, text, x, y, color);
         else
@@ -336,6 +356,7 @@ public abstract class ChatHudMixin extends DrawableHelper implements ChatHudAcce
     }
 
     private void renderText(MatrixStack matrices, TextRenderer textRenderer, OrderedText text, float x, float y, int color) {
+        renderedWords.add(I18nUtils.textToString(text));
         if (Config.getInstance().showShadow)
             textRenderer.drawWithShadow(matrices, text, x, y, color);
         else
@@ -343,6 +364,7 @@ public abstract class ChatHudMixin extends DrawableHelper implements ChatHudAcce
     }
 
     //Same style.isEmpty but it really works
+    // Style.EMPTY booleans are null, uncheckable
     private boolean isEmpty(Style style) {
         return style.getColor() == null && !style.isBold() && !style.isItalic() && !style.isUnderlined() && !style.isStrikethrough() && !style.isObfuscated() && style.getClickEvent() == null && style.getHoverEvent() == null && style.getInsertion() == null && style.getFont().equals(new Identifier("minecraft:default"));
     }
@@ -356,4 +378,27 @@ public abstract class ChatHudMixin extends DrawableHelper implements ChatHudAcce
     public void clear() {
         this.current.clear();
     }
-}
+
+    private boolean allowText(String text) {
+        if(allowAll) return true;
+        //check < >
+        if (text.equals("<")) {
+            if (allowLeft) {
+                allowLeft = false;
+                return true;
+            } else return false;
+        }
+        if (text.equals(">")) {
+            if (allowRight) {
+                allowRight = false;
+                allowLeft = true;
+                return true;
+            } else return false;
+        }
+        if (renderedWords.contains("<") && renderedWords.contains(">") && renderedWords.get(renderedWords.size() - 1).equals(" ")) {
+            allowAll = true;
+            return true;
+        }
+        return true;
+    }
+    }

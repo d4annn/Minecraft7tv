@@ -103,8 +103,10 @@ public class EmoteRenderer {
     }
 
     public void tick(String name) {
-        if (emojis.get(getIndexByName(name)).getEmote().isGif())
-            emojis.get(getIndexByName(name)).nextFrame();
+        try {
+            if (emojis.get(getIndexByName(name)).getEmote().isGif())
+                emojis.get(getIndexByName(name)).nextFrame();
+        } catch (IndexOutOfBoundsException e) {System.out.println("Tried to tick invalid emote");}
     }
 
     // -1 if it doesnt exist

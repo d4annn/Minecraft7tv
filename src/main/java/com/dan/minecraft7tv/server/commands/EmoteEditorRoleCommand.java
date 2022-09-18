@@ -14,19 +14,16 @@ import static net.minecraft.server.command.CommandManager.literal;
 public class EmoteEditorRoleCommand {
 
     public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
-        LiteralArgumentBuilder<ServerCommandSource> literalArgumentBuilder = literal("target").
-                then(literal("editors").
-                        then(literal("add")
+        LiteralArgumentBuilder<ServerCommandSource> literalArgumentBuilder = literal("7tv").
+                then(literal("editors")
+                        .then(literal("add").requires(player -> player.hasPermissionLevel(2))
                                 .then(argument("player", StringArgumentType.string())
-                                        .executes(context -> executeAdd(context.getSource(), StringArgumentType.getString(context, "player"))))).requires((player) -> player.hasPermissionLevel(2)).
-                        then(literal("remove")
-                                .then(argument("player", StringArgumentType.string())
-                                        .executes(context -> executeRemove(context.getSource(), StringArgumentType.getString(context, "player"))))).requires((player) -> player.hasPermissionLevel(2)));
-        LiteralArgumentBuilder<ServerCommandSource> literalArgumentBuilder1 = literal("target").
-                then(literal("editors").
-                        then(literal("list").executes(context -> executeList(context.getSource()))));
+                                        .executes(context -> executeAdd(context.getSource(), StringArgumentType.getString(context, "player"))))).
+                                then(literal("remove").requires(player -> player.hasPermissionLevel(2))
+                                        .then(argument("player", StringArgumentType.string())
+                                                .executes(context -> executeRemove(context.getSource(), StringArgumentType.getString(context, "player"))))));
         dispatcher.register(literalArgumentBuilder);
-        dispatcher.register(literalArgumentBuilder1);
+        dispatcher.register(literal("7tv").then(literal("editors").executes(context -> executeList(context.getSource()))));
     }
 
     private static int executeRemove(ServerCommandSource source, String player) {

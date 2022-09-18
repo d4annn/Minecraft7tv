@@ -63,19 +63,21 @@ public class Minecraft7tvClient implements ClientModInitializer {
             if (OPEN_OPTIONS_MENU.wasPressed()) {
                 int preButton = MinecraftClient.getInstance().options.guiScale;
                 client.setScreen(new OptionsScreen());
-                MinecraftClient.getInstance().options.guiScale = 4;
-                MinecraftClient.getInstance().onResolutionChanged();
+//                MinecraftClient.getInstance().options.guiScale = 4;
+//                MinecraftClient.getInstance().onResolutionChanged();
             }
             if (!Config.getInstance().fpsTick) {
                 if (null != client.currentScreen && client.currentScreen.getClass().getName().equals("com.dan.minecraft7tv.gui.OptionsScreen")) {
                     return;
                 }
-                for (String s : ((ChatHudAccess) MinecraftClient.getInstance().inGameHud.getChatHud()).getCurrent()) {
-                    try {
-                        EmoteRenderer.getInstance().tick(s);
-                    } catch (IndexOutOfBoundsException e) {
+                if (OptionsScreen.currentTab != OptionsScreen.Tabs.EMOTES) {
+                    for (String s : ((ChatHudAccess) MinecraftClient.getInstance().inGameHud.getChatHud()).getCurrent()) {
+                        try {
+                            EmoteRenderer.getInstance().tick(s);
+                        } catch (IndexOutOfBoundsException e) {
+                        }
+                        ((ChatHudAccess) MinecraftClient.getInstance().inGameHud.getChatHud()).clear();
                     }
-                    ((ChatHudAccess) MinecraftClient.getInstance().inGameHud.getChatHud()).clear();
                 }
             }
             if (!Config.getInstance().showDownload) return;
@@ -95,9 +97,9 @@ public class Minecraft7tvClient implements ClientModInitializer {
         });
 
         ClientPlayConnectionEvents.DISCONNECT.register((clientPlayNetworkHandler, client) -> {
-            if(!Config.getInstance().addServerEmotes) {
-                for(RenderableEmote emote : EmoteRenderer.getInstance().getEmotes()) {
-                   EmoteRenderer.getInstance().removeRenderableEmote(emote.getEmote().getName(), true);
+            if (!Config.getInstance().addServerEmotes) {
+                for (RenderableEmote emote : EmoteRenderer.getInstance().getEmotes()) {
+                    EmoteRenderer.getInstance().removeRenderableEmote(emote.getEmote().getName(), true);
                 }
             }
         });

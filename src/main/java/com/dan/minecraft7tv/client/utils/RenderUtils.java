@@ -176,8 +176,6 @@ public class RenderUtils {
         RenderSystem.depthFunc(GL11.GL_LEQUAL);
     }
 
-
-    //for texts
     public static void positionAccurateScale(MatrixStack stack, float scale, double x, double y) {
         stack.translate(1, 1, 1);
         stack.translate(x, y, 0);
